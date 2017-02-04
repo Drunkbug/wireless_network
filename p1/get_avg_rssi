@@ -1,0 +1,22 @@
+#!/bin/sh
+CHANNEL=1
+
+OUTPUT=./avg_rssi.txt
+
+# header of the output (X\Y)
+echo "Channel\tRSSI" > $OUTPUT
+
+while [ $CHANNEL -le 11 ]; do
+	# switch channel
+	iwconfig wlan0mon channel $CHANNEL
+	echo "Channel $CHANNEL:"
+
+	# use lua script to calculate average RSSI
+	AVG_SSI=`tshark -X lua_script:listener.lua -i wlan0mon -c 20 -Q 2>/dev/null`
+	echo "$AVG_SSI\n"
+
+	# write output to a new file 
+	echo "$CHANNEL\t$AVG_SSI" >> $OUTPUT		
+	CHANNEL=$(( CHANNEL+1 ))
+	wait
+done
