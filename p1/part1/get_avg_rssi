@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# usage:
+# -d|--device:
+#	the device you are monitoring (e.g. wlan0mon, wlp2s0mon)
+# 	deafult: wlan0mon
+# -p|--packets
+#	wireshark will stop after n packets		
+# 	deafult: 20, minimum 20 
+# example:
+# ./get_avg_rssi -p 20 -d wlan0mon
+
+DEVICE="wlan0mon"
+PACKETS=20
+
+# read user inputs
+while [[ $# -ge 1 ]]
+do
+key="$1"
+
+case $key in
+	-d|--device)
+		DEVICE="$2"
+	shift
+	;;
+	-p|--packets)
+		PACKETS="$2"
+	shift
+	;;
+	--default)
+	echo ERROR: not a valid input 1>&2
+	;;
+	*)
+	;;
+esac
+shift
+done
+
+# main function
+if [ $PACKETS -lt 20 ]
+then 
+	PACKETS=20
+fi
+
+CHANNEL=1
+
+OUTPUT=./avg_rssi.data
+
+# header of the output (X\Y)
+echo -e "Channel\tRSSI" > $OUTPUT
+
+while [ $CHANNEL -le 11 ]; do
+	# switch channel
+	iwconfig $DEVICE channel $CHANNEL
+	echo "Channel $CHANNEL:"
+
+	# use lua script to calculate average RSSI
+	AVG_SSI=`tshark -X lua_script:listener.lua -i wlan0mon -c $PACKETS -Q 2>/dev/null`
+	echo -e "$AVG_SSI dBm\n"
+
+	# write output to a new file 
+	echo -e "$CHANNEL\t$AVG_SSI" >> $OUTPUT		
+	CHANNEL=$(( CHANNEL+1 ))
+done
