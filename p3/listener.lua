@@ -6,10 +6,10 @@ ssidField = Field.new("wlan.bssid")
 
 last_tick = os.time()
 local function menuable_tap()
+    local APs = {}
     -- Declare the window we will use
     --local tw = TextWindow.new("Address Counter")        
     -- This will contain a hash of counters of appearances of a certain address
-    local APs = {}
 
     -- this is our tap
     local tap = Listener.new("wlan","wlan.fc.type_subtype != 0x15 && wlan.fc.type_subtype != 0x0e");
@@ -24,25 +24,28 @@ local function menuable_tap()
 
     -- this function will be called once for each packet
     function tap.packet(pinfo,tvb,tapdata)                  
-      rssi = value()
+      local rssi = value()
+      local rssiString = tostring(rssi)
 		  -- get ssid
       local ssidRaw = ssidField()
       local ssid = tostring(ssidRaw)
 	  	-- if detect new AP and not exist in table
 		  if ((ssid ~= "nil") and (APs[ssid] == nil) and (ssid ~= "ff:ff:ff:ff:ff:ff")) then
         -- ssid range from smallest to largest
-			  APs[ssid] = {rssi,rssi}
+        APs[ssid] = {}
+			  APs[ssid][1] = rssiString
+			  APs[ssid][2] = rssiString
       elseif ((ssid ~= "nil") and (APs[ssid] ~= nil) and (rssi ~= nil)) then
-        if (APs[ssid][1] > rssi) then 
-          APs[ssid][1] = rssi
-        elseif (APs[ssid][2] < rssi) then
-          APs[ssid][2] = rssi
+        if (tonumber(APs[ssid][1]) > tonumber(rssiString)) then 
+          APs[ssid][1] = rssiString
+        elseif (tonumber(APs[ssid][2]) < tonumber(rssiString)) then
+          APs[ssid][2] = rssiString
         end
 		  end
       -- when reach maximum packets number, print out average
       if (os.time() - last_tick >= 1) then
         for k,v in pairs(APs) do
-          print(tostring(k) .. ":" .. tostring(APs[ssid][1]) .. "~" .. tostring(APs[ssid][2]))
+          print(tostring(k) .. ":" .. tostring(APs[k][1]) .. "~" .. tostring(APs[k][2]))
         end
         print "---";
         last_tick = os.time()
