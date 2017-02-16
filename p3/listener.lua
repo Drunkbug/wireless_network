@@ -30,14 +30,19 @@ local function menuable_tap()
       local ssid = tostring(ssidRaw)
 	  	-- if detect new AP and not exist in table
 		  if ((ssid ~= "nil") and (APs[ssid] == nil) and (ssid ~= "ff:ff:ff:ff:ff:ff")) then
-			  APs[ssid] = {rssi}
+        -- ssid range from smallest to largest
+			  APs[ssid] = {rssi,rssi}
       elseif ((ssid ~= "nil") and (APs[ssid] ~= nil) and (rssi ~= nil)) then
-        table.insert(APs[ssid], rssi)
+        if (APs[ssid][1] > rssi) then 
+          APs[ssid][1] = rssi
+        elseif (APs[ssid][2] < rssi) then
+          APs[ssid][2] = rssi
+        end
 		  end
       -- when reach maximum packets number, print out average
       if (os.time() - last_tick >= 1) then
         for k,v in pairs(APs) do
-          print(k)
+          print(tostring(k) .. ":" .. tostring(APs[ssid][1]) .. "~" .. tostring(APs[ssid][2]))
         end
         print "---";
         last_tick = os.time()
