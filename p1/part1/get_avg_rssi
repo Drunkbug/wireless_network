@@ -55,7 +55,7 @@ while [ $CHANNEL -le 11 ]; do
 	echo "Channel $CHANNEL:"
 
 	# use lua script to calculate average RSSI
-	AVG_SSI=`tshark -X lua_script:listener.lua -i wlan0mon -c $PACKETS -Q 2>/dev/null`
+	AVG_SSI=`tshark -X lua_script:listener.lua -i $DEVICE -c $PACKETS -Q 2>/dev/null`
 	echo -e "$AVG_SSI dBm\n"
 
 	# write output to a new file 
