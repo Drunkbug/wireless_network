@@ -7,7 +7,7 @@ ssidField = Field.new("wlan.bssid")
 last_tick = os.time()
 local function menuable_tap()
     -- Declare the window we will use
-    local tw = TextWindow.new("Address Counter")        
+    --local tw = TextWindow.new("Address Counter")        
     -- This will contain a hash of counters of appearances of a certain address
     local APs = {}
 
@@ -20,7 +20,7 @@ local function menuable_tap()
     end
 
     -- we tell the window to call the remove() function when closed
-    tw:set_atclose(remove)
+    --tw:set_atclose(remove)
 
     -- this function will be called once for each packet
     function tap.packet(pinfo,tvb,tapdata)                  
@@ -29,23 +29,17 @@ local function menuable_tap()
       local ssidRaw = ssidField()
       local ssid = tostring(ssidRaw)
 	  	-- if detect new AP and not exist in table
-		  if (ssid and (APs[ssid] == nil) and (not ssid == "ff:ff:ff:ff:ff:ff")) then
-        --print(tostring(ssid))
-			  APs[ssid] = {}
-		  end
-		  -- if dup AP exist, calculate rssi 
-		  if (ssid and (APs[ssid] ~= nil)) then
+		  if ((ssid ~= "nil") and (APs[ssid] == nil) and (ssid ~= "ff:ff:ff:ff:ff:ff")) then
+			  APs[ssid] = {rssi}
+      elseif ((ssid ~= "nil") and (APs[ssid] ~= nil) and (rssi ~= nil)) then
         table.insert(APs[ssid], rssi)
 		  end
       -- when reach maximum packets number, print out average
       if (os.time() - last_tick >= 1) then
         for k,v in pairs(APs) do
-          if (k) then
-            print(tostring(k))
-          end
+          print(k)
         end
         print "---";
-        --print(tostring(avg))
         last_tick = os.time()
       end
  
@@ -54,16 +48,17 @@ local function menuable_tap()
 
     -- this function will be called once every few seconds to update our window
     function tap.draw(t)
-      tw:clear()
+      --tw:clear()
     end
 
     -- this function will be called whenever a reset is needed
     -- e.g. when reloading the capture file
     function tap.reset()
       APs = {}
-      tw:clear()
+      --tw:clear()
     end
 end
 
 -- to be called when the user selects the Tools->Test->Packets menu
-register_menu("Test/Packets", menuable_tap, MENU_TOOLS_UNSORTED)
+--register_menu("Test/Packets", menuable_tap, MENU_TOOLS_UNSORTED)
+menuable_tap()
