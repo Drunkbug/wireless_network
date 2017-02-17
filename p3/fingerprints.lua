@@ -6,15 +6,42 @@ ssidField = Field.new("wlan.bssid")
 
 start_tick = os.time()
 last_tick = os.time()
-roomName = ""
+filter = ""
+results = {}
+
+local function file_exists(file)
+  local f = io.open(file, "rb")
+  if f then f:close() end
+return f ~= nil
+end
+
+-- get all lines from file
+local function read_lines(file)
+  if not file_exists(file) then return {} end
+  APs = {}
+  for line in io.lines(file) do 
+    APs[#APs + 1] = line
+  end
+  return APs
+end
+
+local function generate_filter(APs, acc)
+  for k, v in pairs(APs) do
+    acc = acc .. "wlan.bssid==" .. v .. " || "
+  end
+  acc = acc:sub(1,-4)
+  print (acc)
+  return acc
+end
+
+
 local function menuable_tap()
-    local APs = {}
     -- Declare the window we will use
     --local tw = TextWindow.new("Address Counter")        
     -- This will contain a hash of counters of appearances of a certain address
 
     -- this is our tap
-    local tap = Listener.new("wlan","wlan.fc.type_subtype != 0x15 && wlan.fc.type_subtype != 0x0e");
+    local tap = Listener.new("wlan", filter);
 --        print(tostring(value))
     function remove()
             -- this way we remove the listener that otherwise will remain running indefinitely
@@ -32,22 +59,24 @@ local function menuable_tap()
       local ssidRaw = ssidField()
       local ssid = tostring(ssidRaw)
 	  	-- if detect new AP and not exist in table
-		  if ((ssid ~= "nil") and (APs[ssid] == nil) and (ssid ~= "ff:ff:ff:ff:ff:ff")) then
+		  if ((ssid ~= "nil") and (result[ssid] == nil) and (ssid ~= "ff:ff:ff:ff:ff:ff")) then
         -- ssid range from smallest to largest
-        APs[ssid] = {}
-			  APs[ssid][1] = rssiString
-			  APs[ssid][2] = rssiString
-      elseif ((ssid ~= "nil") and (APs[ssid] ~= nil) and (rssi ~= nil)) then
-        if (tonumber(APs[ssid][1]) > tonumber(rssiString)) then 
-          APs[ssid][1] = rssiString
-        elseif (tonumber(APs[ssid][2]) < tonumber(rssiString)) then
-          APs[ssid][2] = rssiString
-        end
+        result[ssid] = {}
+        -- total rssi
+			  result[ssid][1] = rssiString
+        -- frame number
+			  result[ssid][2] = 1 
+        -- average
+        result[ssid][3] = tonumber(result[ssid][1]) / result[ssid][2]
+      elseif ((ssid ~= "nil") and (result[ssid] ~= nil) and (rssi ~= nil)) then
+        result[ssid][1] = result[ssid][1] + tonumber(rssiString) 
+        result[ssid][2] = result[ssid][2] + 1
+        result[ssid][3] = tonumber(result[ssid][1]) / result[ssid][2]
 		  end
       -- when reach maximum packets number, print out average
       if (os.time() - last_tick >= 1) then
-        for k,v in pairs(APs) do
-          print(tostring(k) .. ": " .. tostring(APs[k][1]) .. " ~ " .. tostring(APs[k][2]))
+        for k,v in pairs(result) do
+          print(tostring(k) .. ": " .. tostring(result[k][3]))
         end
         print "---";
         last_tick = os.time()
@@ -56,16 +85,14 @@ local function menuable_tap()
       if (os.time() - start_tick >= 60) then
         print ("writing to file" .. roomName .. ".room...")
         file = io.open(roomName .. ".room", "w")
-        for k,v in pairs(APs) do
-          print(tostring(k) .. ": " .. tostring(APs[k][1]) .. " ~ " .. tostring(APs[k][2]))
-          file:write(tostring(k) .. ": " .. tostring(APs[k][1]) .. " ~ " .. tostring(APs[k][2]) .. "\n")
+        for k,v in pairs(result) do
+          print(tostring(k) .. ": " .. tostring(result[k][3]))
+          file:write(tostring(k) .. ": " .. tostring(result[k][3]) .. "\n")
         end
         file:close()
         print ("finished.\n")
         os.exit()
       end
- 
-
     end
 
     -- this function will be called once every few seconds to update our window
@@ -77,13 +104,24 @@ local function menuable_tap()
     -- e.g. when reloading the capture file
     function tap.reset()
       APs = {}
+      result = {}
       --tw:clear()
     end
 end
 
 -- to be called when the user selects the Tools->Test->Packets menu
 --register_menu("Test/Packets", menuable_tap, MENU_TOOLS_UNSORTED)
-local out 
+--
+print ("reading accesspoints...\n")
+local apFile ="accesspoints.txt"
+local APs = read_lines(apFile)
+print ("done.\n")
+
+print ("generating filter...\n")
+local acc = ""
+filter = generate_filter(APs, acc)
+
+local roomName
 repeat
   io.write("room name: ")
   io.flush()
@@ -91,3 +129,4 @@ repeat
 until roomName ~= nil
 start_tick = os.time()
 menuable_tap()
+
