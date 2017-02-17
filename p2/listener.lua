@@ -1,9 +1,10 @@
 -- This program will register a menu that will open a window with a count of occurrences
 -- of every address in the capture
 value = Field.new('radiotap.dbm_antsignal')
---frame_type = Field.new('wlan.fc.type_subtype')
+-- number of frames and the total rssi
 frame_num=0
 total = 0
+-- tick for every second
 last_tick = os.time()
 local function menuable_tap()
         -- Declare the window we will use
@@ -13,7 +14,6 @@ local function menuable_tap()
 
         -- this is our tap
         local tap = Listener.new('frame','radiotap');
---        print(tostring(value))
         function remove()
                 -- this way we remove the listener that otherwise will remain running indefinitely
                 tap:remove();
@@ -29,14 +29,12 @@ local function menuable_tap()
                     total = total + tonumber(tostring(rssi))
                     frame_num = frame_num + 1
                     avg = total / frame_num
-  --              bea = frame_type()
                 end
                 local src = ips[tostring(pinfo.src)] or 0
                 local dst = ips[tostring(pinfo.dst)] or 0
-                -- when reach maximum packets number, print out average
+                -- when reach 1 second, print out the average
                 if (os.time() - last_tick >= 1) then
                     print(tostring(os.time())..' '..tostring(avg))
-                   --print(tostring(avg))
                     total = 0
                     frame_num = 0
                     last_tick = os.time()

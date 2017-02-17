@@ -18,7 +18,6 @@ local function menuable_tap()
 
         -- this is our tap
         local tap = Listener.new('frame','ip.addr == 10.110.45.140');
---        print(tostring(value))
         function remove()
                 -- this way we remove the listener that otherwise will remain running indefinitely
                 tap:remove();
@@ -30,12 +29,10 @@ local function menuable_tap()
         -- this function will be called once for each packet
         function tap.packet(pinfo,tvb,tapdata)                  
                 
---               print(tostring(pinfo.dst)..' '..tostring(tostring(pinfo.dst) == '10.110.45.140'))
 
                 if tostring(pinfo.dst) ==  my_ip then
                     packet_num = packet_num + 1
                     pps[num] = packet_num
---                   print(tostring(rssi)..' '..tostring(packet_num))
                     if os.time() - last_tick >= 1 then
                         print(tostring(os.time())..' '..tostring(packet_num))
                         packet_num = 0
