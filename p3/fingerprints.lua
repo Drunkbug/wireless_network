@@ -7,7 +7,8 @@ ssidField = Field.new("wlan.bssid")
 start_tick = os.time()
 last_tick = os.time()
 filter = ""
-results = {}
+result = {}
+roomName = ""
 
 local function file_exists(file)
   local f = io.open(file, "rb")
@@ -41,7 +42,7 @@ local function menuable_tap()
     -- This will contain a hash of counters of appearances of a certain address
 
     -- this is our tap
-    local tap = Listener.new("wlan", filter);
+    local tap = Listener.new("wlan", "wlan.fc.type_subtype != 0x15 && wlan.fc.type_subtype != 0x0e && (" .. filter .. ")");
 --        print(tostring(value))
     function remove()
             -- this way we remove the listener that otherwise will remain running indefinitely
@@ -121,7 +122,6 @@ print ("generating filter...\n")
 local acc = ""
 filter = generate_filter(APs, acc)
 
-local roomName
 repeat
   io.write("room name: ")
   io.flush()
