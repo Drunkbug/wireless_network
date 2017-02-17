@@ -47,17 +47,22 @@ local function menuable_tap()
       -- when reach maximum packets number, print out average
       if (os.time() - last_tick >= 1) then
         for k,v in pairs(APs) do
-          print(tostring(k) .. ":" .. tostring(APs[k][1]) .. "~" .. tostring(APs[k][2]))
+          print(tostring(k) .. ": " .. tostring(APs[k][1]) .. " ~ " .. tostring(APs[k][2]))
         end
         print "---";
         last_tick = os.time()
       end
 
-      if (os.time() - start_tick >= 10) then
+      if (os.time() - start_tick >= 60) then
+        print ("writing to file" .. roomName .. ".room...")
+        file = io.open(roomName .. ".room", "w")
         for k,v in pairs(APs) do
-          file = io.open(roomName .. ".room", "a")
-          file:write(tostring(k) .. ":" .. tostring(APs[k][1]) .. "~" .. tostring(APs[k][2]) .. "\n")
+          print(tostring(k) .. ": " .. tostring(APs[k][1]) .. " ~ " .. tostring(APs[k][2]))
+          file:write(tostring(k) .. ": " .. tostring(APs[k][1]) .. " ~ " .. tostring(APs[k][2]) .. "\n")
         end
+        file:close()
+        print ("finished.\n")
+        os.exit()
       end
  
 
