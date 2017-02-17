@@ -3,6 +3,8 @@
 value = Field.new('radiotap.dbm_antsignal')
 -- get AP field
 ssidField = Field.new("wlan.bssid")
+-- get frequency
+frequency = Field.new("wlan_radio.frequency")
 
 start_tick = os.time()
 last_tick = os.time()
@@ -88,10 +90,14 @@ local function menuable_tap()
       -- moving mode
       elseif (mode == 2) then
         local distance
+        local freq = frequency()
+        local freqnum = tonumber(tostring(freq))
         if (os.time() - last_tick >= 1) then
           if ((ssid ~= "nil") and (rssi ~= nil) and (result[ssid] ~= nil)) then
-            distance = 10^((math.abs(math.abs(result[ssid][3]) - math.abs(tonumber(rssiString))))/(10*4))
+            --distance = 10^((result[ssid][3] - tonumber(rssiString) - 20 * math.log10(freqnum) + 60 - 32.44)/(20))
+            distance = 10^(math.abs(math.abs(result[ssid][3]) - math.abs(tonumber(rssiString)))/(20)) - 1
             print ("current distance: " .. distance)
+            --print (result[ssid][3] .. "vs" .. rssiString)
             last_tick = os.time()
           end
         end
