@@ -4,7 +4,9 @@ value = Field.new('radiotap.dbm_antsignal')
 -- get AP field
 ssidField = Field.new("wlan.bssid")
 
+start_tick = os.time()
 last_tick = os.time()
+roomName = ""
 local function menuable_tap()
     local APs = {}
     -- Declare the window we will use
@@ -50,6 +52,13 @@ local function menuable_tap()
         print "---";
         last_tick = os.time()
       end
+
+      if (os.time() - start_tick >= 10) then
+        for k,v in pairs(APs) do
+          file = io.open(roomName .. ".room", "a")
+          file:write(tostring(k) .. ":" .. tostring(APs[k][1]) .. "~" .. tostring(APs[k][2]) .. "\n")
+        end
+      end
  
 
     end
@@ -69,4 +78,11 @@ end
 
 -- to be called when the user selects the Tools->Test->Packets menu
 --register_menu("Test/Packets", menuable_tap, MENU_TOOLS_UNSORTED)
+local out 
+repeat
+  io.write("room name: ")
+  io.flush()
+  roomName=io.read()
+until roomName ~= nil
+start_tick = os.time()
 menuable_tap()
